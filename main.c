@@ -35,15 +35,15 @@
 #define SYNC_V1_H1 (TMDS_CTRL_11 | (TMDS_CTRL_00 << 10) | (TMDS_CTRL_00 << 20))
 
 #define MODE_H_SYNC_POLARITY 0
-#define MODE_H_FRONT_PORCH   16
-#define MODE_H_SYNC_WIDTH    96
-#define MODE_H_BACK_PORCH    48
-#define MODE_H_ACTIVE_PIXELS 640
+#define MODE_H_FRONT_PORCH   16   //16
+#define MODE_H_SYNC_WIDTH    96   //62
+#define MODE_H_BACK_PORCH    48   //60
+#define MODE_H_ACTIVE_PIXELS 640  //720
 
 #define MODE_V_SYNC_POLARITY 0
-#define MODE_V_FRONT_PORCH   10
-#define MODE_V_SYNC_WIDTH    2
-#define MODE_V_BACK_PORCH    33
+#define MODE_V_FRONT_PORCH   10   //9
+#define MODE_V_SYNC_WIDTH    2    //6
+#define MODE_V_BACK_PORCH    33   //30
 #define MODE_V_ACTIVE_LINES  480
 
 #define MODE_H_TOTAL_PIXELS ( \
@@ -156,8 +156,6 @@ static __force_inline uint16_t colour_rgb565(uint8_t r, uint8_t g, uint8_t b) {
 static __force_inline uint8_t colour_rgb332(uint8_t r, uint8_t g, uint8_t b) {
     return (r & 0xc0) >> 6 | (g & 0xe0) >> 3 | (b & 0xe0) >> 0;
 }
-
-void scroll_framebuffer(void);
 
 int main(void) {
     // Configure HSTX's TMDS encoder for RGB332
