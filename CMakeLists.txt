@@ -38,6 +38,9 @@ pico_sdk_init()
 
 set(sources
   main.c
+  pico_hdmi/hstx_data_island_queue.c
+  pico_hdmi/hstx_packet.c
+  pico_hdmi/video_output.c
 )
 
 # must match with executable name and source file names
@@ -46,6 +49,7 @@ add_executable(${PROJECT_NAME} ${sources})
 target_include_directories(${PROJECT_NAME} PRIVATE
   ${CMAKE_CURRENT_LIST_DIR}
   ${CMAKE_CURRENT_LIST_DIR}/generated_fonts
+  ${CMAKE_CURRENT_LIST_DIR}/pico_hdmi
 )
 
 # must match with executable name
@@ -54,6 +58,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   pico_sync
   hardware_dma
   hardware_uart
+  pico_multicore
+  hardware_clocks
+  hardware_irq  
 )
 
 # must match with executable name
