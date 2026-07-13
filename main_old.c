@@ -17,11 +17,14 @@
 #include "hardware/structs/sio.h"
 #include "hardware/clocks.h"
 #include "pico/stdlib.h"
+#include <string.h>
 #include "pico/multicore.h"
 #include "pico/sem.h"
 
-#include "mountains_640x480_rgb332.h"
-#define framebuf mountains_640x480
+//#include "mountains_640x480_rgb332.h"
+//#define framebuf mountains_640x480
+#include "nature.h"
+#define framebuf nature_pic
 
 // ----------------------------------------------------------------------------
 // DVI constants
@@ -37,16 +40,16 @@
 #define SYNC_V1_H1 (TMDS_CTRL_11 | (TMDS_CTRL_00 << 10) | (TMDS_CTRL_00 << 20))
 
 #define MODE_H_SYNC_POLARITY 0
-#define MODE_H_FRONT_PORCH   16   //16
-#define MODE_H_SYNC_WIDTH    96   //62
-#define MODE_H_BACK_PORCH    48   //60
-#define MODE_H_ACTIVE_PIXELS 640  //720
+#define MODE_H_FRONT_PORCH   40//16   //16
+#define MODE_H_SYNC_WIDTH    128//96   //62
+#define MODE_H_BACK_PORCH    88//48   //60
+#define MODE_H_ACTIVE_PIXELS 800//640  //720
 
 #define MODE_V_SYNC_POLARITY 0
-#define MODE_V_FRONT_PORCH   10   //9
-#define MODE_V_SYNC_WIDTH    2    //6
-#define MODE_V_BACK_PORCH    33   //30
-#define MODE_V_ACTIVE_LINES  480
+#define MODE_V_FRONT_PORCH   1//10   //9
+#define MODE_V_SYNC_WIDTH    4//2    //6
+#define MODE_V_BACK_PORCH    23//33   //30
+#define MODE_V_ACTIVE_LINES  600//480
 
 #define MODE_H_TOTAL_PIXELS ( \
     MODE_H_FRONT_PORCH + MODE_H_SYNC_WIDTH + \
@@ -62,6 +65,10 @@
 #define HSTX_CMD_TMDS        (0x2u << 12)
 #define HSTX_CMD_TMDS_REPEAT (0x3u << 12)
 #define HSTX_CMD_NOP         (0xfu << 12)
+
+//static uint8_t disp_buff[MODE_H_ACTIVE_PIXELS * MODE_V_ACTIVE_LINES];
+//#define framebuf disp_buff
+
 
 // ----------------------------------------------------------------------------
 // HSTX command lists
@@ -161,15 +168,18 @@ static __force_inline uint8_t colour_rgb332(uint8_t r, uint8_t g, uint8_t b) {
 
 int main(void) {
   
-    set_sys_clock_khz(125000, true);
+    set_sys_clock_khz(200000, true);
     
     clock_configure(clk_peri,
     0,
     CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLK_SYS,
-    125 * MHZ,
-    125 * MHZ);  
+    200 * MHZ,
+    200 * MHZ);  
     
     stdio_init_all();
+    
+    // Fill red
+    //memset(disp_buff, 0xE0, sizeof(disp_buff));
   
     // Configure HSTX's TMDS encoder for RGB332
     hstx_ctrl_hw->expand_tmds =

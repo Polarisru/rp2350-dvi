@@ -37,10 +37,10 @@ pico_sdk_init()
 #######
 
 set(sources
-  main.c
-  pico_hdmi/hstx_data_island_queue.c
-  pico_hdmi/hstx_packet.c
-  pico_hdmi/video_output.c
+  main_old.c
+  #pico_hdmi/hstx_data_island_queue.c
+  #pico_hdmi/hstx_packet.c
+  #pico_hdmi/video_output.c
 )
 
 # must match with executable name and source file names
