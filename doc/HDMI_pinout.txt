@@ -1,0 +1,13 @@
+1 - TDMS Data2+    GPIO16
+3 - TDMS Data2-    GPIO17
+4 - TDMS Data1+    GPIO18
+6 - TDMS Data1-    GPIO19
+7 - TDMS Data0+    GPIO12
+9 - TDMS Data0-    GPIO13
+10 - TDMS Clock+   GPIO14
+12 - TDMS Clock-   GPIO15
+17 - GND
+18 - +5V???
+19 - Hot Plug Detect???
+
+
