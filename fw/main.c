@@ -24,17 +24,17 @@ void core1_main() {
 
         if (now >= next_task) {
             char str[32];
-            uint64_t sec = now / 1000000ULL;
-            uint64_t ms  = (now / 1000ULL) % 1000ULL;
+            uint32_t sec = (uint32_t)(now / 1000000UL);
+            uint32_t ms  = (uint32_t)((now / 1000UL) % 1000UL);
 
-            snprintf(str, sizeof str,
-                     "Time: %" PRIu64 ".%03" PRIu64 " sec",
-                     sec, ms);
+            snprintf(str, sizeof str, "Time: %d.%03d sec", sec, ms);
 
-            //gui_draw_rect(100, 490, GUI_WIDTH - 100, 580, GUI_BLACK);
-            //gui_draw_text_centered(GUI_WIDTH / 2, 500,
-            //                       str, FONT_64, GUI_BLUE);
-
+            while (!dvi_is_vblank())
+                tight_loop_contents();
+              
+            gui_draw_rect(100, 490, GUI_WIDTH - 100, 580, GUI_BLACK);
+            gui_draw_text_centered(GUI_WIDTH / 2, 500,
+                                  str, FONT_64, GUI_BLUE);
             next_task += PERIOD_US;
         }
 

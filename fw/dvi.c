@@ -49,6 +49,7 @@
 #define HSTX_CMD_NOP         (0xfu << 12)
 
 static uint8_t *dvi_framebuf;
+volatile bool dvi_in_vblank = false;
 
 // ----------------------------------------------------------------------------
 // HSTX command lists
@@ -56,7 +57,7 @@ static uint8_t *dvi_framebuf;
 // Lists are padded with NOPs to be >= HSTX FIFO size, to avoid DMA rapidly
 // pingponging and tripping up the IRQs.
 
-static uint32_t vblank_line_vsync_off[] = {
+static uint32_t vblank_line_vsync_off[] __attribute__((section(".scratch_x.vblank_off"))) = {
     HSTX_CMD_RAW_REPEAT | MODE_H_FRONT_PORCH,
     SYNC_V1_H1,
     HSTX_CMD_RAW_REPEAT | MODE_H_SYNC_WIDTH,
@@ -66,7 +67,7 @@ static uint32_t vblank_line_vsync_off[] = {
     HSTX_CMD_NOP
 };
 
-static uint32_t vblank_line_vsync_on[] = {
+static uint32_t vblank_line_vsync_on[] __attribute__((section(".scratch_x.vblank_on"))) = {
     HSTX_CMD_RAW_REPEAT | MODE_H_FRONT_PORCH,
     SYNC_V0_H1,
     HSTX_CMD_RAW_REPEAT | MODE_H_SYNC_WIDTH,
@@ -76,7 +77,7 @@ static uint32_t vblank_line_vsync_on[] = {
     HSTX_CMD_NOP
 };
 
-static uint32_t vactive_line[] = {
+static uint32_t vactive_line[] __attribute__((section(".scratch_x.vactive"))) = {
     HSTX_CMD_RAW_REPEAT | MODE_H_FRONT_PORCH,
     SYNC_V1_H1,
     HSTX_CMD_NOP,
@@ -87,6 +88,10 @@ static uint32_t vactive_line[] = {
     SYNC_V1_H1,
     HSTX_CMD_TMDS       | MODE_H_ACTIVE_PIXELS
 };
+
+bool dvi_is_vblank(void) {
+    return dvi_in_vblank;
+}
 
 // ----------------------------------------------------------------------------
 // DMA logic
@@ -113,6 +118,9 @@ void __scratch_x("") dma_irq_handler() {
     dma_channel_hw_t *ch = &dma_hw->ch[ch_num];
     dma_hw->intr = 1u << ch_num;
     dma_pong = !dma_pong;
+    
+    // Update vblank status based on the NEXT scanline about to be sent
+    dvi_in_vblank = (v_scanline < (MODE_V_TOTAL_LINES - MODE_V_ACTIVE_LINES));
 
     if (v_scanline >= MODE_V_FRONT_PORCH && v_scanline < (MODE_V_FRONT_PORCH + MODE_V_SYNC_WIDTH)) {
         ch->read_addr = (uintptr_t)vblank_line_vsync_on;
