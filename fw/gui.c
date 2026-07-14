@@ -304,7 +304,8 @@ void gui_draw_text(int x, int y, const char *text, font_id_t font_id, uint8_t co
         if ((uint8_t)c >= font->first_char && (uint8_t)c <= font->last_char)
         {
             draw_char(cursor_x, y, c, font, color);
-            cursor_x += font->widths[(uint8_t)c - font->first_char] + 1;
+            //cursor_x += font->widths[(uint8_t)c - font->first_char] + 1;
+            cursor_x += font->advances[(uint8_t)c - font->first_char];
         }
     }
 }

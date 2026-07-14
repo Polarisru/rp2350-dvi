@@ -2,15 +2,45 @@
 
 // Generate DVI output using the command expander and TMDS encoder in HSTX.
 
+#include <stdio.h>
+#include <inttypes.h>
 #include "hardware/clocks.h"
 #include "pico/stdlib.h"
-#include "pico/multicore.h"
 #include "pico/sem.h"
+#include "pico/multicore.h"
 #include "dvi.h"
 #include "gui.h"
 #include "fonts.h"
 
 #include "nature_rgb332.h"
+
+#define PERIOD_US 20000u
+
+void core1_main() {
+    uint64_t next_task = time_us_64() + PERIOD_US;
+
+    while (1) {
+        uint64_t now = time_us_64();
+
+        if (now >= next_task) {
+            char str[32];
+            uint64_t sec = now / 1000000ULL;
+            uint64_t ms  = (now / 1000ULL) % 1000ULL;
+
+            snprintf(str, sizeof str,
+                     "Time: %" PRIu64 ".%03" PRIu64 " sec",
+                     sec, ms);
+
+            //gui_draw_rect(100, 490, GUI_WIDTH - 100, 580, GUI_BLACK);
+            //gui_draw_text_centered(GUI_WIDTH / 2, 500,
+            //                       str, FONT_64, GUI_BLUE);
+
+            next_task += PERIOD_US;
+        }
+
+        tight_loop_contents();
+    }
+}
 
 int main(void) {
   
@@ -29,8 +59,11 @@ int main(void) {
     gui_draw_picture(0, 0, nature_pic, GUI_WIDTH, GUI_HEIGHT);
     gui_draw_text_centered(GUI_WIDTH / 2, 500, "TestTestTest", FONT_64, GUI_BLUE);
     
+    multicore_launch_core1(core1_main);
+    
     dvi_init(gui_get_framebuf());
     
-    while (1)
-        __wfi();
+    while (1) {
+        tight_loop_contents();
+    }
 }
