@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include "fonts.h"
 
-#define GUI_WIDTH     800
-#define GUI_HEIGHT    600
+#define GUI_WIDTH     720//800
+#define GUI_HEIGHT    480//600
 #define GUI_SIZE      (GUI_WIDTH * GUI_HEIGHT)
 
 // Colors (8-bit RGB)

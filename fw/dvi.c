@@ -22,16 +22,41 @@
 #define SYNC_V1_H1 (TMDS_CTRL_11 | (TMDS_CTRL_00 << 10) | (TMDS_CTRL_00 << 20))
 
 #define MODE_H_SYNC_POLARITY 0
-#define MODE_H_FRONT_PORCH   40//16   //16
-#define MODE_H_SYNC_WIDTH    128//96   //62
-#define MODE_H_BACK_PORCH    88//48   //60
-#define MODE_H_ACTIVE_PIXELS 800//640  //720
+// #define MODE_H_FRONT_PORCH   40//16   //16
+// #define MODE_H_SYNC_WIDTH    128//96   //62
+// #define MODE_H_BACK_PORCH    88//48   //60
+// #define MODE_H_ACTIVE_PIXELS 800//640  //720
 
 #define MODE_V_SYNC_POLARITY 0
-#define MODE_V_FRONT_PORCH   1//10   //9
-#define MODE_V_SYNC_WIDTH    4//2    //6
-#define MODE_V_BACK_PORCH    23//33   //30
-#define MODE_V_ACTIVE_LINES  600//480
+// #define MODE_V_FRONT_PORCH   1//10   //9
+// #define MODE_V_SYNC_WIDTH    4//2    //6
+// #define MODE_V_BACK_PORCH    23//33   //30
+// #define MODE_V_ACTIVE_LINES  600//480
+
+
+// 848x480
+// #define MODE_H_FRONT_PORCH    16
+// #define MODE_H_SYNC_WIDTH     112
+// #define MODE_H_BACK_PORCH     112
+// #define MODE_H_ACTIVE_PIXELS  848
+// #define MODE_H_TOTAL_PIXELS   1088
+// #define MODE_V_FRONT_PORCH    6
+// #define MODE_V_SYNC_WIDTH     8
+// #define MODE_V_BACK_PORCH     23
+// #define MODE_V_ACTIVE_LINES   480
+// #define MODE_V_TOTAL_LINES    517
+
+// 848x480
+#define MODE_H_ACTIVE_PIXELS   720
+#define MODE_H_FRONT_PORCH      16
+#define MODE_H_SYNC_WIDTH       62
+#define MODE_H_BACK_PORCH       60
+//#define MODE_H_TOTAL_PIXELS    858
+#define MODE_V_ACTIVE_LINES    480
+#define MODE_V_FRONT_PORCH       9
+#define MODE_V_SYNC_WIDTH        6
+#define MODE_V_BACK_PORCH       30
+//#define MODE_V_TOTAL_LINES     525
 
 #define MODE_H_TOTAL_PIXELS ( \
     MODE_H_FRONT_PORCH + MODE_H_SYNC_WIDTH + \
@@ -93,6 +118,8 @@ bool dvi_is_vblank(void) {
     return dvi_in_vblank;
 }
 
+#define RENDER_LAST_SAFE_LINE     7
+
 // ----------------------------------------------------------------------------
 // DMA logic
 
@@ -120,7 +147,8 @@ void __scratch_x("") dma_irq_handler() {
     dma_pong = !dma_pong;
     
     // Update vblank status based on the NEXT scanline about to be sent
-    dvi_in_vblank = (v_scanline < (MODE_V_TOTAL_LINES - MODE_V_ACTIVE_LINES));
+    //dvi_in_vblank = (v_scanline < (MODE_V_TOTAL_LINES - MODE_V_ACTIVE_LINES));
+    dvi_in_vblank = (v_scanline < RENDER_LAST_SAFE_LINE);
 
     if (v_scanline >= MODE_V_FRONT_PORCH && v_scanline < (MODE_V_FRONT_PORCH + MODE_V_SYNC_WIDTH)) {
         ch->read_addr = (uintptr_t)vblank_line_vsync_on;

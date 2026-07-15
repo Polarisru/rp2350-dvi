@@ -72,11 +72,11 @@ static int gui_get_text_width(const char *text, const bitmap_font_t *font)
 // Internal helpers
 // ---------------------------------------------------------------------------
 
-static void draw_pixel(int x, int y, char color)
+static __force_inline void draw_pixel(int x, int y, char color)
 {
-    if ((x < 0) || (x >= GUI_WIDTH) || 
-        (y < 0) || (y >= GUI_HEIGHT))
-      return;
+    //if ((x < 0) || (x >= GUI_WIDTH) || 
+    //    (y < 0) || (y >= GUI_HEIGHT))
+    //  return;
 
     int pixel = (GUI_WIDTH * y) + x;
 
@@ -124,7 +124,7 @@ static void draw_pixel_alpha_rgb332(int x, int y,
     framebuf[pixel] = (out_r << 5) | (out_g << 2) | out_b;
 }
 
-/*static void draw_char(int x, int y, char c, const bitmap_font_t *font, uint8_t color)
+static void draw_char(int x, int y, char c, const bitmap_font_t *font, uint8_t color)
 {
     if (font == NULL) return;
     if ((uint8_t)c < font->first_char || (uint8_t)c > font->last_char) return;
@@ -147,9 +147,9 @@ static void draw_pixel_alpha_rgb332(int x, int y,
                 draw_pixel(x + gx, y + gy, color);
         }
     }
-}*/
+}
 
-static void draw_char(int x, int y, char c,
+/*static void draw_char(int x, int y, char c,
                       const bitmap_font_t *font, uint8_t color)
 {
     if (font == NULL)
@@ -165,7 +165,7 @@ static void draw_char(int x, int y, char c,
     uint8_t glyph_width = font->widths[glyph_index];
     uint8_t glyph_height = font->height;
 
-    /* 2 bits/pixel = four pixels stored in each byte. */
+    // 2 bits/pixel = four pixels stored in each byte.
     uint16_t row_bytes = (glyph_width + 3u) / 4u;
 
     for (uint8_t gy = 0; gy < glyph_height; gy++)
@@ -179,13 +179,11 @@ static void draw_char(int x, int y, char c,
 
             uint8_t packed = font->bitmap[byte_index];
 
-            /*
-             * Packed byte:
-             * bits 7:6 -> x + 0
-             * bits 5:4 -> x + 1
-             * bits 3:2 -> x + 2
-             * bits 1:0 -> x + 3
-             */
+             // Packed byte:
+             // bits 7:6 -> x + 0
+             // bits 5:4 -> x + 1
+             // bits 3:2 -> x + 2
+             // bits 1:0 -> x + 3
             uint8_t alpha = (packed >> (6u - 2u * (gx & 3u))) & 0x03u;
 
             if (alpha != 0)
@@ -194,7 +192,7 @@ static void draw_char(int x, int y, char c,
             }
         }
     }
-}
+}*/
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -213,10 +211,11 @@ void gui_draw_rect(int x1, int y1, int x2, int y2, uint8_t color)
     if (y1 < 0) y1 = 0;
     if (x2 >= GUI_WIDTH)  x2 = GUI_WIDTH  - 1;
     if (y2 >= GUI_HEIGHT) y2 = GUI_HEIGHT - 1;
+    int width  = x2 - x1 + 1;
+    int height = y2 - y1 + 1;
 
     for (int y = y1; y <= y2; y++)
-        for (int x = x1; x <= x2; x++)
-            draw_pixel(x, y, color);
+        (void)memset(&framebuf[y * GUI_WIDTH + x1], color, width);
 }
 
 void gui_draw_box(int x1, int y1, int x2, int y2, uint8_t width, uint8_t color)

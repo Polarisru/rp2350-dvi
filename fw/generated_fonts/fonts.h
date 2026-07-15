@@ -9,11 +9,10 @@ typedef struct
     uint8_t height;
     uint8_t first_char;
     uint8_t last_char;
-    uint8_t bpp;
-    const uint16_t *offsets;
-    const uint8_t  *widths;
-    const uint8_t  *advances;
-    const uint8_t  *bitmap;
+    const uint16_t *offsets;   // glyph start offsets in bitmap[]
+    const uint8_t  *widths;    // per-glyph width in pixels
+    const uint8_t  *advances;  // per-glyph horizontal advance
+    const uint8_t  *bitmap;    // 1-bit packed bitmap data
 } bitmap_font_t;
 
 #define BITMAP_FONT_T_DEFINED
