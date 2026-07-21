@@ -11,8 +11,84 @@
 #include "dvi.h"
 #include "gui.h"
 #include "fonts.h"
+#include "uart_rx.h"
 
-#include "nature_rgb332.h"
+#define APP_UART              uart0
+#define APP_UART_TX_PIN       0
+#define APP_UART_RX_PIN       1
+#define APP_UART_BAUD         250000
+#define UART_RX_BUFFER_SIZE   128
+
+typedef struct
+{
+    uint8_t max_lines;
+    uint8_t font;
+} logic_context_t;
+
+static void logic_on_uart_message(const uart_rx_message_t *message, void *user_ctx)
+{
+    logic_context_t *logic = (logic_context_t *)user_ctx;
+
+    switch (message->type)
+    {
+        case UART_RX_LINE_TYPE_HEADER:
+            logic->max_lines  = message->data.header.number_of_lines;
+            logic->font = message->data.header.font;
+            break;
+
+        case UART_RX_LINE_TYPE_TEXT:
+            if (message->line_index <= logic->max_lines)
+            {
+                draw_text(10,
+                      10 + (message->line_index - 1) * get_font_height((font_id_t)logic->font),
+                      message->data.text.text,
+                      (font_id_t)logic->font,
+                      message->data.draw_text.color);
+            }
+            break;
+
+        case UART_RX_CMD_FILL:
+            fill_screen(message->data.fill.color);
+            break;
+
+        case UART_RX_CMD_RECT:
+            draw_rect(message->data.rect.x1,
+                      message->data.rect.y1,
+                      message->data.rect.x2,
+                      message->data.rect.y2,
+                      message->data.rect.color);
+            break;
+            
+        case UART_RX_CMD_BOX:
+            draw_box(message->data.box.x1,
+                       message->data.box.y1,
+                       message->data.box.x2,
+                       message->data.box.y2,
+                       message->data.box.width,
+                       message->data.box.color);
+            break;            
+
+        case UART_RX_CMD_TEXT:
+            draw_text(message->data.draw_text.x,
+                      message->data.draw_text.y,
+                      message->data.draw_text.text,
+                      (font_id_t)message->data.draw_text.font,
+                      message->data.draw_text.color);
+            break;
+
+        default:
+            break;
+    }
+}
+
+static void logic_on_uart_error(const char *raw_line, const char *reason, void *user_ctx)
+{
+    (void)raw_line;
+    (void)reason;
+    (void)user_ctx;
+}
+
+/* #include "nature_rgb332.h"
 
 #define PERIOD_US 20000u
 
@@ -39,6 +115,28 @@ void core1_main() {
         }
 
         tight_loop_contents();
+    }
+} */
+
+void core1_main() {
+    static char rx_buffer[UART_RX_BUFFER_SIZE];
+    static uart_rx_t uart_rx;
+    static logic_context_t logic = {0};  
+    
+    uart_init(APP_UART, APP_UART_BAUD);
+    gpio_set_function(APP_UART_TX_PIN, GPIO_FUNC_UART);
+    gpio_set_function(APP_UART_RX_PIN, GPIO_FUNC_UART);
+
+    uart_rx_init(&uart_rx,
+                 APP_UART,
+                 rx_buffer,
+                 sizeof(rx_buffer),
+                 logic_on_uart_message,
+                 logic_on_uart_error,
+                 &logic);
+
+    while (1) {
+        uart_rx_poll(&uart_rx);
     }
 }
 
