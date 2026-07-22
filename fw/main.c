@@ -20,6 +20,8 @@
 #define APP_UART_BAUD         250000
 #define UART_RX_BUFFER_SIZE   128
 
+#define LED_PIN     10
+
 typedef struct
 {
     uint8_t max_lines;
@@ -29,6 +31,8 @@ typedef struct
 static void logic_on_uart_message(const uart_rx_message_t *message, void *user_ctx)
 {
     logic_context_t *logic = (logic_context_t *)user_ctx;
+    
+    gpio_xor_mask(1u << LED_PIN);
 
     switch (message->type)
     {
@@ -44,7 +48,7 @@ static void logic_on_uart_message(const uart_rx_message_t *message, void *user_c
                       10 + (message->line_index - 1) * get_font_height((font_id_t)logic->font),
                       message->data.text.text,
                       (font_id_t)logic->font,
-                      message->data.draw_text.color);
+                      message->data.text.color);
             }
             break;
 
@@ -86,7 +90,7 @@ static void logic_on_uart_error(const char *raw_line, const char *reason, void *
 {
     (void)raw_line;
     (void)reason;
-    (void)user_ctx;
+    (void)user_ctx;  
 }
 
 /* #include "nature_rgb332.h"
@@ -124,10 +128,6 @@ void core1_main() {
     static uart_rx_t uart_rx;
     static logic_context_t logic = {0};  
     
-    uart_init(APP_UART, APP_UART_BAUD);
-    gpio_set_function(APP_UART_TX_PIN, GPIO_FUNC_UART);
-    gpio_set_function(APP_UART_RX_PIN, GPIO_FUNC_UART);
-
     uart_rx_init(&uart_rx,
                  APP_UART,
                  rx_buffer,
@@ -136,6 +136,9 @@ void core1_main() {
                  logic_on_uart_error,
                  &logic);
                  
+    gpio_init(LED_PIN);
+    gpio_set_dir(LED_PIN, GPIO_OUT); 
+
     while (1) {
         uart_rx_poll(&uart_rx);
     }
@@ -152,8 +155,12 @@ int main(void) {
     135 * MHZ,//200 * MHZ,
     135 * MHZ);//200 * MHZ);  
     
-    stdio_init_all();
+    //stdio_init_all();
         
+    gpio_set_function(APP_UART_TX_PIN, GPIO_FUNC_UART);
+    gpio_set_function(APP_UART_RX_PIN, GPIO_FUNC_UART);
+    uart_init(APP_UART, APP_UART_BAUD);
+
     gui_init();
     gui_fill_screen(GUI_WHITE);
     gui_draw_picture((GUI_WIDTH - 480) / 2, (GUI_HEIGHT - 291) / 2, volz, 480, 291);
