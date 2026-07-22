@@ -12,6 +12,7 @@
 #include "gui.h"
 #include "fonts.h"
 #include "uart_rx.h"
+#include "volz.h"
 
 #define APP_UART              uart0
 #define APP_UART_TX_PIN       0
@@ -135,8 +136,6 @@ void core1_main() {
                  logic_on_uart_error,
                  &logic);
                  
-    gui_draw_picture((GUI_WIDTH - 436) / 2, (GUI_HEIGHT - 264) / 2, volz, 436, 264);
-
     while (1) {
         uart_rx_poll(&uart_rx);
     }
@@ -157,6 +156,7 @@ int main(void) {
         
     gui_init();
     gui_fill_screen(GUI_WHITE);
+    gui_draw_picture((GUI_WIDTH - 480) / 2, (GUI_HEIGHT - 291) / 2, volz, 480, 291);
 
     multicore_launch_core1(core1_main);
     

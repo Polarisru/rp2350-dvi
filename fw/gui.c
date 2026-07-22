@@ -200,7 +200,7 @@ static void draw_char(int x, int y, char c, const bitmap_font_t *font, uint8_t c
 
 void gui_fill_screen(uint8_t color)
 {
-    memset(framebuf, (color & 0x07) | ((color & 0x07) << 3), GUI_SIZE);
+    memset(framebuf, color, GUI_SIZE);
 }
 
 void gui_draw_rect(int x1, int y1, int x2, int y2, uint8_t color)
