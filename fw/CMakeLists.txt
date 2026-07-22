@@ -40,6 +40,7 @@ set(sources
   main.c
   dvi.c
   gui.c
+  uart_rx.c
   #pico_hdmi/hstx_data_island_queue.c
   #pico_hdmi/hstx_packet.c
   #pico_hdmi/video_output.c

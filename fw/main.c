@@ -39,7 +39,7 @@ static void logic_on_uart_message(const uart_rx_message_t *message, void *user_c
         case UART_RX_LINE_TYPE_TEXT:
             if (message->line_index <= logic->max_lines)
             {
-                draw_text(10,
+                gui_draw_text(10,
                       10 + (message->line_index - 1) * get_font_height((font_id_t)logic->font),
                       message->data.text.text,
                       (font_id_t)logic->font,
@@ -48,32 +48,32 @@ static void logic_on_uart_message(const uart_rx_message_t *message, void *user_c
             break;
 
         case UART_RX_CMD_FILL:
-            fill_screen(message->data.fill.color);
+            gui_fill_screen(message->data.fill.color);
             break;
 
         case UART_RX_CMD_RECT:
-            draw_rect(message->data.rect.x1,
-                      message->data.rect.y1,
-                      message->data.rect.x2,
-                      message->data.rect.y2,
-                      message->data.rect.color);
+            gui_draw_rect(message->data.rect.x1,
+                          message->data.rect.y1,
+                          message->data.rect.x2,
+                          message->data.rect.y2,
+                          message->data.rect.color);
             break;
             
         case UART_RX_CMD_BOX:
-            draw_box(message->data.box.x1,
-                       message->data.box.y1,
-                       message->data.box.x2,
-                       message->data.box.y2,
-                       message->data.box.width,
-                       message->data.box.color);
+            gui_draw_box(message->data.box.x1,
+                         message->data.box.y1,
+                         message->data.box.x2,
+                         message->data.box.y2,
+                         message->data.box.width,
+                         message->data.box.color);
             break;            
 
         case UART_RX_CMD_TEXT:
-            draw_text(message->data.draw_text.x,
-                      message->data.draw_text.y,
-                      message->data.draw_text.text,
-                      (font_id_t)message->data.draw_text.font,
-                      message->data.draw_text.color);
+            gui_draw_text(message->data.draw_text.x,
+                          message->data.draw_text.y,
+                          message->data.draw_text.text,
+                          (font_id_t)message->data.draw_text.font,
+                          message->data.draw_text.color);
             break;
 
         default:
@@ -134,6 +134,8 @@ void core1_main() {
                  logic_on_uart_message,
                  logic_on_uart_error,
                  &logic);
+                 
+    gui_draw_picture((GUI_WIDTH - 436) / 2, (GUI_HEIGHT - 264) / 2, volz, 436, 264);
 
     while (1) {
         uart_rx_poll(&uart_rx);
@@ -152,12 +154,10 @@ int main(void) {
     135 * MHZ);//200 * MHZ);  
     
     stdio_init_all();
-    
+        
     gui_init();
     gui_fill_screen(GUI_WHITE);
-    //gui_draw_picture(0, 0, nature_pic, GUI_WIDTH, GUI_HEIGHT);
-    //gui_draw_text_centered(GUI_WIDTH / 2, 500, "TestTestTest", FONT_64, GUI_BLUE);
-    
+
     multicore_launch_core1(core1_main);
     
     dvi_init(gui_get_framebuf());
