@@ -9,6 +9,17 @@
 
 static uint8_t framebuf[GUI_SIZE];
 
+static const uint8_t old_colors[8] = {
+  GUI_BLACK,
+  GUI_RED,
+  GUI_GREEN,
+  GUI_YELLOW,
+  GUI_BLUE,
+  GUI_MAGENTA,
+  GUI_CYAN,
+  GUI_WHITE
+};
+
 static __force_inline uint16_t colour_rgb565(uint8_t r, uint8_t g, uint8_t b) {
     return ((uint16_t)r & 0xf8) >> 3 | ((uint16_t)g & 0xfc) << 3 | ((uint16_t)b & 0xf8) << 8;
 }
@@ -197,6 +208,13 @@ static void draw_char(int x, int y, char c, const bitmap_font_t *font, uint8_t c
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
+
+uint8_t gui_get_old_color(uint8_t color)
+{
+  if (color > 7) return 0;
+  
+  return old_colors[color];
+}
 
 void gui_fill_screen(uint8_t color)
 {

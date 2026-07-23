@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include "gui.h"
 
 static void report_error(uart_rx_t *ctx, const char *raw_line, const char *reason)
 {
@@ -76,7 +77,7 @@ static bool parse_u32_strict(const char *s, uint32_t *value)
 static bool parse_cmd_fill(uart_rx_t *ctx, char *payload, uart_rx_message_t *msg)
 {
     uint16_t color;
-    if (!parse_u16_strict(payload, &color) /*|| color > 7U*/)
+    if (!parse_u16_strict(payload, &color) || color > 7U)
     {
         report_error(ctx, payload, "F: invalid color (0..7)");
         return false;
@@ -102,7 +103,7 @@ static bool parse_cmd_rect(uart_rx_t *ctx, char *payload, uart_rx_message_t *msg
         if (tok != NULL) p = tok + 1;
     }
 
-    //if (fields[4] > 7U) { report_error(ctx, payload, "R: invalid color (0..7)"); return false; }
+    if (fields[4] > 7U) { report_error(ctx, payload, "R: invalid color (0..7)"); return false; }
 
     msg->type           = UART_RX_CMD_RECT;
     msg->data.rect.x1   = fields[0];
@@ -129,7 +130,7 @@ static bool parse_cmd_box(uart_rx_t *ctx, char *payload, uart_rx_message_t *msg)
         if (tok != NULL) p = tok + 1;
     }
 
-    //if (fields[5] > 7U) { report_error(ctx, payload, "B: invalid color (0..7)"); return false; }
+    if (fields[5] > 7U) { report_error(ctx, payload, "B: invalid color (0..7)"); return false; }
 
     msg->type           = UART_RX_CMD_BOX;
     msg->data.box.x1   = fields[0];
@@ -157,7 +158,7 @@ static bool parse_cmd_text(uart_rx_t *ctx, char *payload, uart_rx_message_t *msg
         p = tok + 1;
     }
 
-    //if (nums[2] > 7U) { report_error(ctx, payload, "T: invalid color (0..7)"); return false; }
+    if (nums[2] > 7U) { report_error(ctx, payload, "T: invalid color (0..7)"); return false; }
     if (nums[3] > 2U) { report_error(ctx, payload, "T: invalid font (0..2)");  return false; }
 
     msg->type                 = UART_RX_CMD_TEXT;

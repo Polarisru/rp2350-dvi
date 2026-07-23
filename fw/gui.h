@@ -19,6 +19,7 @@
 #define GUI_WHITE     0xFF
 
 uint16_t get_font_height(font_id_t id);
+uint8_t gui_get_old_color(uint8_t color);
 void gui_fill_screen(uint8_t color);
 void gui_draw_rect(int x1, int y1, int x2, int y2, uint8_t color);
 void gui_draw_box(int x1, int y1, int x2, int y2, uint8_t width, uint8_t color);

@@ -48,7 +48,7 @@ static void logic_on_uart_message(const uart_rx_message_t *message, void *user_c
                       10 + (message->line_index - 1) * get_font_height((font_id_t)logic->font),
                       message->data.text.text,
                       (font_id_t)logic->font,
-                      message->data.text.color);
+                      gui_get_old_color(message->data.text.color));
             }
             break;
 
@@ -61,7 +61,7 @@ static void logic_on_uart_message(const uart_rx_message_t *message, void *user_c
                           message->data.rect.y1,
                           message->data.rect.x2,
                           message->data.rect.y2,
-                          message->data.rect.color);
+                          gui_get_old_color(message->data.rect.color));
             break;
             
         case UART_RX_CMD_BOX:
@@ -70,7 +70,7 @@ static void logic_on_uart_message(const uart_rx_message_t *message, void *user_c
                          message->data.box.x2,
                          message->data.box.y2,
                          message->data.box.width,
-                         message->data.box.color);
+                         gui_get_old_color(message->data.box.color));
             break;            
 
         case UART_RX_CMD_TEXT:
@@ -78,7 +78,7 @@ static void logic_on_uart_message(const uart_rx_message_t *message, void *user_c
                           message->data.draw_text.y,
                           message->data.draw_text.text,
                           (font_id_t)message->data.draw_text.font,
-                          message->data.draw_text.color);
+                          gui_get_old_color(message->data.draw_text.color));
             break;
 
         default:
