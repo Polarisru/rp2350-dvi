@@ -4,22 +4,32 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+
 #include "hardware/uart.h"
 
 typedef enum
 {
-    UART_RX_LINE_TYPE_HEADER = 0,   /* 0:<num_lines>:<font>                 */
-    UART_RX_LINE_TYPE_TEXT   = 1,   /* <N>:<color>:<text>                   */
-    UART_RX_CMD_FILL         = 2,   /* F:<color>                            */
-    UART_RX_CMD_RECT         = 3,   /* R:<x1>:<y1>:<x2>:<y2>:<color>        */
-    UART_RX_CMD_BOX          = 4,   /* B:<x1>:<y1>:<x2>:<y2>:<width>:<color> */
-    UART_RX_CMD_TEXT         = 5,   /* T:<x>:<y>:<color>:<font>:<text>      */
+    UART_RX_LINE_TYPE_HEADER = 0, /* 0:<num_lines>:<font> */
+    UART_RX_LINE_TYPE_TEXT = 1,   /* <N>:<text>:<color> */
+
+    /* Legacy 3-bit VGA color commands, color range 0..7. */
+    UART_RX_CMD_FILL = 2,         /* F:<color> */
+    UART_RX_CMD_RECT = 3,         /* R:<x1>:<y1>:<x2>:<y2>:<color> */
+    UART_RX_CMD_BOX = 4,          /* B:<x1>:<y1>:<x2>:<y2>:<width>:<color> */
+    UART_RX_CMD_TEXT = 5,         /* T:<x>:<y>:<color>:<font>:<text> */
+
+    /* Direct 8-bit color commands, color range 0..255. */
+    UART_RX_CMD_FILL_8BIT = 6,    /* f:<color> */
+    UART_RX_CMD_RECT_8BIT = 7,    /* r:<x1>:<y1>:<x2>:<y2>:<color> */
+    UART_RX_CMD_BOX_8BIT = 8,     /* b:<x1>:<y1>:<x2>:<y2>:<width>:<color> */
+    UART_RX_CMD_TEXT_8BIT = 9,    /* t:<x>:<y>:<color>:<font>:<text> */
 } uart_rx_line_type_t;
 
 typedef struct
 {
     uart_rx_line_type_t type;
-    uint16_t line_index;            /* valid for HEADER and TEXT types only */
+    uint16_t line_index; /* Valid for HEADER and TEXT types only. */
+
     union
     {
         struct
@@ -27,38 +37,54 @@ typedef struct
             uint8_t number_of_lines;
             uint8_t font;
         } header;
+
         struct
         {
             const char *text;
-            uint8_t    color;
+            uint8_t color;
         } text;
+
         struct
         {
-            uint8_t color;          /* 0..7 */
+            uint8_t color;
         } fill;
+
         struct
         {
-            uint16_t x1, y1, x2, y2;
-            uint8_t  color;         /* 0..7 */
+            uint16_t x1;
+            uint16_t y1;
+            uint16_t x2;
+            uint16_t y2;
+            uint8_t color;
         } rect;
+
         struct
         {
-            uint16_t x1, y1, x2, y2;
-            uint8_t  width;
-            uint8_t  color;         /* 0..7 */
+            uint16_t x1;
+            uint16_t y1;
+            uint16_t x2;
+            uint16_t y2;
+            uint8_t width;
+            uint8_t color;
         } box;
+
         struct
         {
-            uint16_t    x, y;
-            uint8_t     color;      /* 0..7 */
-            uint8_t     font;       /* 0..2 */
+            uint16_t x;
+            uint16_t y;
+            uint8_t color;
+            uint8_t font;
             const char *text;
         } draw_text;
     } data;
 } uart_rx_message_t;
 
-typedef void (*uart_rx_message_cb_t)(const uart_rx_message_t *message, void *user_ctx);
-typedef void (*uart_rx_error_cb_t)(const char *raw_line, const char *reason, void *user_ctx);
+typedef void (*uart_rx_message_cb_t)(const uart_rx_message_t *message,
+                                     void *user_ctx);
+
+typedef void (*uart_rx_error_cb_t)(const char *raw_line,
+                                   const char *reason,
+                                   void *user_ctx);
 
 typedef struct
 {
@@ -80,6 +106,7 @@ void uart_rx_init(uart_rx_t *ctx,
                   void *user_ctx);
 
 void uart_rx_poll(uart_rx_t *ctx);
+
 void uart_rx_reset(uart_rx_t *ctx);
 
 #endif

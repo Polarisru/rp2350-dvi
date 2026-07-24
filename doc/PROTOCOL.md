@@ -12,21 +12,22 @@ All numeric fields are **unsigned decimal integers** — no leading zeros, no sp
 
 ### `0` — Frame header
 
-```
-0:<num_lines>:<font_height>
+```text
+0:<num_lines>:<font>
 ```
 
 Announces the start of a new text frame.
 
-| Field        | Type   | Range    | Description                               |
-|--------------|--------|----------|-------------------------------------------|
-| `num_lines`  | uint16 | 1..65535 | Number of text lines that will follow     |
-| `font`       | uint8  | 0..2     | Font size (see [Font table](#font-table)) |
+| Field | Type | Range | Description |
+|---|---|---:|---|
+| `num_lines` | uint8 | 0..255 | Number of text lines that will follow |
+| `font` | uint8 | 0..2 | Font size; see [Font table](#font-table) |
 
 Must be sent before any numbered text lines. Resets the receiver's line counter.
 
 **Example**
-```
+
+```text
 0:4:2
 ```
 
@@ -34,151 +35,265 @@ Must be sent before any numbered text lines. Resets the receiver's line counter.
 
 ### `<N>` — Numbered text line
 
-```
+```text
 <N>:<text>:<color>
 ```
 
-Draws a line of text at a logical row index. Position on screen is determined by the application using `font_height` from the preceding header.
+Draws a line of text at a logical row index. Position on screen is determined by the application using the font from the preceding header.
 
-| Field   | Type   | Range    | Description                                                   |
-|---------|--------|----------|---------------------------------------------------------------|
-| `N`     | uint16 | 1..65535 | Line index (must be ≤ `num_lines` from the current header)    |
-| `color` | uint8  | 0..7     | VGA color index (see [Color table](#color-table))             |
-| `text`  | string | —        | Arbitrary text; may contain colons                            |
+| Field | Type | Range | Description |
+|---|---|---:|---|
+| `N` | uint16 | 1..65535 | Line index |
+| `text` | string | — | Arbitrary text; may contain colons |
+| `color` | uint8 | 0..7 | VGA color index; see [Color table](#color-table) |
 
 The parser splits on the **last** colon to locate `color`, so `text` may contain colons freely.
 
-**Example**
-```
-1:7:Hello, world!
-2:3:Status: OK
+**Examples**
+
+```text
+1:Hello, world!:7
+2:Status: OK:3
 ```
 
 ---
 
-### `F` — Fill screen
+## Legacy and 8-bit commands
 
-```
+Uppercase drawing commands use the legacy VGA palette range `0..7` and return the original message types.
+
+Lowercase drawing commands use identical payload layouts, accept colors in the range `0..255`, and return distinct 8-bit message types.
+
+| Command | Color range | Message type |
+|---|---:|---|
+| `F:<color>` | 0..7 | `UART_RX_CMD_FILL` |
+| `f:<color>` | 0..255 | `UART_RX_CMD_FILL_8BIT` |
+| `R:<x1>:<y1>:<x2>:<y2>:<color>` | 0..7 | `UART_RX_CMD_RECT` |
+| `r:<x1>:<y1>:<x2>:<y2>:<color>` | 0..255 | `UART_RX_CMD_RECT_8BIT` |
+| `B:<x1>:<y1>:<x2>:<y2>:<width>:<color>` | 0..7 | `UART_RX_CMD_BOX` |
+| `b:<x1>:<y1>:<x2>:<y2>:<width>:<color>` | 0..255 | `UART_RX_CMD_BOX_8BIT` |
+| `T:<x>:<y>:<color>:<font>:<text>` | 0..7 | `UART_RX_CMD_TEXT` |
+| `t:<x>:<y>:<color>:<font>:<text>` | 0..255 | `UART_RX_CMD_TEXT_8BIT` |
+
+The application uses `message->type` to distinguish legacy palette commands from direct 8-bit color commands.
+
+---
+
+### `F` — Fill screen, legacy color
+
+```text
 F:<color>
 ```
 
-Fills the entire 640×480 framebuffer with a solid color using a single `memset`.
+Fills the entire framebuffer with a legacy VGA palette color.
 
-| Field   | Type  | Range | Description                                   |
-|---------|-------|-------|-----------------------------------------------|
-| `color` | uint8 | 0..7  | VGA color index (see [Color table](#color-table)) |
+| Field | Type | Range | Description |
+|---|---|---:|---|
+| `color` | uint8 | 0..7 | VGA color index; see [Color table](#color-table) |
 
 **Example**
-```
+
+```text
 F:0
 ```
-*(fills screen black)*
 
 ---
 
-### `R` — Draw rectangle
+### `f` — Fill screen, 8-bit color
 
+```text
+f:<color>
 ```
+
+Fills the entire framebuffer with a direct 8-bit color. The receiver returns `UART_RX_CMD_FILL_8BIT`.
+
+| Field | Type | Range | Description |
+|---|---|---:|---|
+| `color` | uint8 | 0..255 | Direct color value interpreted by the application |
+
+**Example**
+
+```text
+f:128
+```
+
+---
+
+### `R` — Draw rectangle, legacy color
+
+```text
 R:<x1>:<y1>:<x2>:<y2>:<color>
 ```
 
-Draws a filled rectangle. Corner order does not matter — coordinates are sorted internally.  
-Out-of-bounds coordinates are clamped to the screen edges (0..639 / 0..479).
+Draws a filled rectangle using a legacy VGA palette color. Corner order does not matter; coordinates are sorted internally. Out-of-bounds coordinates are clamped to the screen edges.
 
-| Field   | Type   | Range  | Description                                   |
-|---------|--------|--------|-----------------------------------------------|
-| `x1`    | uint16 | 0..639 | X coordinate of the first corner             |
-| `y1`    | uint16 | 0..479 | Y coordinate of the first corner             |
-| `x2`    | uint16 | 0..639 | X coordinate of the opposite corner          |
-| `y2`    | uint16 | 0..479 | Y coordinate of the opposite corner          |
-| `color` | uint8  | 0..7   | VGA color index (see [Color table](#color-table)) |
+| Field | Type | Range | Description |
+|---|---|---:|---|
+| `x1` | uint16 | 0..719 | X coordinate of the first corner |
+| `y1` | uint16 | 0..479 | Y coordinate of the first corner |
+| `x2` | uint16 | 0..719 | X coordinate of the opposite corner |
+| `y2` | uint16 | 0..479 | Y coordinate of the opposite corner |
+| `color` | uint8 | 0..7 | VGA color index |
 
 **Example**
-```
+
+```text
 R:10:20:200:100:3
 ```
-*(draws a yellow filled rectangle from (10,20) to (200,100))*
 
 ---
 
-### `B` — Draw box (frame)
+### `r` — Draw rectangle, 8-bit color
 
+```text
+r:<x1>:<y1>:<x2>:<y2>:<color>
 ```
+
+Draws a filled rectangle with a direct 8-bit color. The receiver returns `UART_RX_CMD_RECT_8BIT`.
+
+| Field | Type | Range | Description |
+|---|---|---:|---|
+| `x1` | uint16 | 0..719 | X coordinate of the first corner |
+| `y1` | uint16 | 0..479 | Y coordinate of the first corner |
+| `x2` | uint16 | 0..719 | X coordinate of the opposite corner |
+| `y2` | uint16 | 0..479 | Y coordinate of the opposite corner |
+| `color` | uint8 | 0..255 | Direct color value interpreted by the application |
+
+**Example**
+
+```text
+r:10:20:200:100:196
+```
+
+---
+
+### `B` — Draw box, legacy color
+
+```text
 B:<x1>:<y1>:<x2>:<y2>:<width>:<color>
 ```
 
-Draws a box. Corner order does not matter — coordinates are sorted internally.  
-Out-of-bounds coordinates are clamped to the screen edges (0..639 / 0..479).
+Draws a rectangular frame using a legacy VGA palette color.
 
-| Field   | Type   | Range  | Description                                   |
-|---------|--------|--------|-----------------------------------------------|
-| `x1`    | uint16 | 0..639 | X coordinate of the first corner             |
-| `y1`    | uint16 | 0..479 | Y coordinate of the first corner             |
-| `x2`    | uint16 | 0..639 | X coordinate of the opposite corner          |
-| `y2`    | uint16 | 0..479 | Y coordinate of the opposite corner          |
-| `width` | uint8  | 0..255 | Width of the line                            |
-| `color` | uint8  | 0..7   | VGA color index (see [Color table](#color-table)) |
+| Field | Type | Range | Description |
+|---|---|---:|---|
+| `x1` | uint16 | 0..719 | X coordinate of the first corner |
+| `y1` | uint16 | 0..479 | Y coordinate of the first corner |
+| `x2` | uint16 | 0..719 | X coordinate of the opposite corner |
+| `y2` | uint16 | 0..479 | Y coordinate of the opposite corner |
+| `width` | uint8 | 0..255 | Line width in pixels |
+| `color` | uint8 | 0..7 | VGA color index |
 
 **Example**
-```
+
+```text
 B:10:20:200:100:2:3
 ```
-*(draws a yellow box from (10,20) to (200,100)) with a line width of 2 pixels*
 
 ---
 
-### `T` — Draw text
+### `b` — Draw box, 8-bit color
 
+```text
+b:<x1>:<y1>:<x2>:<y2>:<width>:<color>
 ```
+
+Draws a rectangular frame using a direct 8-bit color. The receiver returns `UART_RX_CMD_BOX_8BIT`.
+
+| Field | Type | Range | Description |
+|---|---|---:|---|
+| `x1` | uint16 | 0..719 | X coordinate of the first corner |
+| `y1` | uint16 | 0..479 | Y coordinate of the first corner |
+| `x2` | uint16 | 0..719 | X coordinate of the opposite corner |
+| `y2` | uint16 | 0..479 | Y coordinate of the opposite corner |
+| `width` | uint8 | 0..255 | Line width in pixels |
+| `color` | uint8 | 0..255 | Direct color value interpreted by the application |
+
+**Example**
+
+```text
+b:10:20:200:100:2:45
+```
+
+---
+
+### `T` — Draw text, legacy color
+
+```text
 T:<x>:<y>:<color>:<font>:<text>
 ```
 
-Renders a UTF-8 text string at a pixel-precise position using a bitmap font.  
-The text field is everything after the fifth colon, so it may contain colons.
+Renders UTF-8 text at a pixel-precise position using a bitmap font and a legacy VGA palette color.
 
-| Field   | Type   | Range  | Description                                   |
-|---------|--------|--------|-----------------------------------------------|
-| `x`     | uint16 | 0..639 | Pixel X of the top-left of the first glyph   |
-| `y`     | uint16 | 0..479 | Pixel Y of the top-left of the first glyph   |
-| `color` | uint8  | 0..7   | VGA color index (see [Color table](#color-table)) |
-| `font`  | uint8  | 0..2   | Font size (see [Font table](#font-table))     |
-| `text`  | string | —      | Text to render; may contain colons            |
+| Field | Type | Range | Description |
+|---|---|---:|---|
+| `x` | uint16 | 0..719 | Pixel X coordinate of the first glyph |
+| `y` | uint16 | 0..479 | Pixel Y coordinate of the first glyph |
+| `color` | uint8 | 0..7 | VGA color index |
+| `font` | uint8 | 0..2 | Font size; see [Font table](#font-table) |
+| `text` | string | — | Text to render; may contain colons |
 
 **Example**
-```
+
+```text
 T:50:120:7:1:Temperature: 23.5 C
 ```
-*(renders white text at (50,120) using the medium font)*
+
+---
+
+### `t` — Draw text, 8-bit color
+
+```text
+t:<x>:<y>:<color>:<font>:<text>
+```
+
+Renders UTF-8 text at a pixel-precise position using a direct 8-bit color. The receiver returns `UART_RX_CMD_TEXT_8BIT`.
+
+| Field | Type | Range | Description |
+|---|---|---:|---|
+| `x` | uint16 | 0..719 | Pixel X coordinate of the first glyph |
+| `y` | uint16 | 0..479 | Pixel Y coordinate of the first glyph |
+| `color` | uint8 | 0..255 | Direct color value interpreted by the application |
+| `font` | uint8 | 0..2 | Font size; see [Font table](#font-table) |
+| `text` | string | — | Text to render; may contain colons |
+
+**Example**
+
+```text
+t:50:120:255:1:Temperature: 23.5 C
+```
 
 ---
 
 ## Color table
 
-| Index | Name    |
-|-------|---------|
-| 0     | Black   |
-| 1     | Red     |
-| 2     | Green   |
-| 3     | Yellow  |
-| 4     | Blue    |
-| 5     | Magenta |
-| 6     | Cyan    |
-| 7     | White   |
+The legacy uppercase commands use this 3-bit VGA palette.
 
-Colors are 3-bit RGB (1 bit per channel). The VGA DAC uses 330 Ω resistors on GPIO 18–20.
+| Index | Name |
+|---:|---|
+| 0 | Black |
+| 1 | Red |
+| 2 | Green |
+| 3 | Yellow |
+| 4 | Blue |
+| 5 | Magenta |
+| 6 | Cyan |
+| 7 | White |
+
+Colors are 3-bit RGB, one bit per channel.
 
 ---
 
 ## Font table
 
 | Index | Glyph height |
-|-------|--------------|
-| 0     | 64 px        |
-| 1     | 48 px        |
-| 2     | 32 px        |
+|---:|---|
+| 0 | 64 px |
+| 1 | 48 px |
+| 2 | 32 px |
 
 ---
 
 ## Error handling
 
-If a line cannot be parsed (missing field, non-numeric value, out-of-range value, or buffer overflow), the receiver calls the registered error callback with the offending raw token and a short reason string. The line is discarded and reception continues normally from the next newline.
+If a line cannot be parsed because it has a missing field, non-numeric field, out-of-range value, or buffer overflow, the receiver calls the registered error callback with the offending raw token and a short reason string. The line is discarded and reception continues normally from the next newline.
