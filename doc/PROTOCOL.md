@@ -1,6 +1,6 @@
 # UART Protocol
 
-Serial port: **115200 8N1**, pins GPIO 0 (TX) / GPIO 1 (RX).
+Serial port: **250000 8N1**, pins GPIO 0 (TX) / GPIO 1 (RX).
 
 Each command is a single line terminated by `\n` (bare LF or CRLF both accepted).  
 Maximum line length: **127 characters** (excluding the newline).  

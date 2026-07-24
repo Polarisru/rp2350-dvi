@@ -36,23 +36,21 @@ pico_sdk_init()
 
 #######
 
+set(FW_DIR ${CMAKE_CURRENT_SOURCE_DIR}/fw)
+
 set(sources
-  main.c
-  dvi.c
-  gui.c
-  uart_rx.c
-  #pico_hdmi/hstx_data_island_queue.c
-  #pico_hdmi/hstx_packet.c
-  #pico_hdmi/video_output.c
+  ${FW_DIR}/main.c
+  ${FW_DIR}/dvi.c
+  ${FW_DIR}/gui.c
+  ${FW_DIR}/uart_rx.c
 )
 
 # must match with executable name and source file names
 add_executable(${PROJECT_NAME} ${sources})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-  ${CMAKE_CURRENT_LIST_DIR}
-  ${CMAKE_CURRENT_LIST_DIR}/generated_fonts
-  #${CMAKE_CURRENT_LIST_DIR}/pico_hdmi
+  ${FW_DIR}
+  ${FW_DIR}/generated_fonts
 )
 
 # must match with executable name
