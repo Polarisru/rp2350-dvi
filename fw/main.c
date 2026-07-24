@@ -53,9 +53,13 @@ static void logic_on_uart_message(const uart_rx_message_t *message, void *user_c
             break;
 
         case UART_RX_CMD_FILL:
+            gui_fill_screen(gui_get_old_color(message->data.fill.color));
+            break;
+        
+        case UART_RX_CMD_FILL_8BIT:
             gui_fill_screen(message->data.fill.color);
             break;
-
+        
         case UART_RX_CMD_RECT:
             gui_draw_rect(message->data.rect.x1,
                           message->data.rect.y1,
@@ -64,6 +68,14 @@ static void logic_on_uart_message(const uart_rx_message_t *message, void *user_c
                           gui_get_old_color(message->data.rect.color));
             break;
             
+        case UART_RX_CMD_RECT_8BIT:
+            gui_draw_rect(message->data.rect.x1,
+                          message->data.rect.y1,
+                          message->data.rect.x2,
+                          message->data.rect.y2,
+                          message->data.rect.color);
+            break;
+
         case UART_RX_CMD_BOX:
             gui_draw_box(message->data.box.x1,
                          message->data.box.y1,
@@ -73,12 +85,29 @@ static void logic_on_uart_message(const uart_rx_message_t *message, void *user_c
                          gui_get_old_color(message->data.box.color));
             break;            
 
+        case UART_RX_CMD_BOX_8BIT:
+            gui_draw_box(message->data.box.x1,
+                         message->data.box.y1,
+                         message->data.box.x2,
+                         message->data.box.y2,
+                         message->data.box.width,
+                         message->data.box.color);
+            break;            
+
         case UART_RX_CMD_TEXT:
             gui_draw_text(message->data.draw_text.x,
                           message->data.draw_text.y,
                           message->data.draw_text.text,
                           (font_id_t)message->data.draw_text.font,
                           gui_get_old_color(message->data.draw_text.color));
+            break;
+
+        case UART_RX_CMD_TEXT_8BIT:
+            gui_draw_text(message->data.draw_text.x,
+                          message->data.draw_text.y,
+                          message->data.draw_text.text,
+                          (font_id_t)message->data.draw_text.font,
+                          message->data.draw_text.color);
             break;
 
         default:
